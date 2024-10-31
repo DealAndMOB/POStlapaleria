@@ -24,6 +24,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pos/search', [POSController::class, 'searchProducts'])->name('pos.search');
     Route::post('/pos/process-sale', [POSController::class, 'processSale'])->name('pos.process-sale');
     Route::post('/pos/add-external-product', [POSController::class, 'addExternalProduct'])->name('pos.add-external-product');
+    Route::post('/pos/print-ticket/{sale}', [POSController::class, 'printTicket'])->name('pos.print-ticket');
 
     // Rutas para productos, categorías y ventas
     Route::resource('products', ProductController::class);

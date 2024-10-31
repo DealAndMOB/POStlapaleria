@@ -114,4 +114,78 @@ class PosController extends Controller
 
         return response()->json($externalProduct);
     }
+
+    public function printTicket($saleId)
+    {
+        try {
+            $sale = Sale::with(['items.product'])->findOrFail($saleId);
+            
+            // Configurar el conector de la impresora
+            // Cambia "POS-58" por el nombre de tu impresora
+            $connector = new WindowsPrintConnector("POS-58");
+            $printer = new Printer($connector);
+
+            // Iniciar la impresión
+            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            
+            // Encabezado del ticket
+            $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+            $printer->text("TU EMPRESA\n");
+            $printer->selectPrintMode();
+            $printer->text("Dirección de tu empresa\n");
+            $printer->text("Tel: (123) 456-7890\n");
+            $printer->feed();
+
+            // Información de la venta
+            $printer->text("Ticket #: " . str_pad($sale->id, 8, "0", STR_PAD_LEFT) . "\n");
+            $printer->text("Fecha: " . $sale->created_at->format('d/m/Y H:i:s') . "\n");
+            $printer->feed();
+
+            // Encabezado de productos
+            $printer->text("--------------------------------\n");
+            $printer->text("CANT  PRODUCTO    PRECIO   TOTAL\n");
+            $printer->text("--------------------------------\n");
+
+            // Productos
+            foreach ($sale->items as $item) {
+                $name = $item->product ? $item->product->name : $item->external_product_name;
+                // Limitar el nombre del producto a 10 caracteres
+                $name = substr($name, 0, 10);
+                
+                $qty = str_pad($item->quantity, 3, " ", STR_PAD_LEFT);
+                $price = str_pad('$' . number_format($item->price, 2), 8, " ", STR_PAD_LEFT);
+                $total = str_pad('$' . number_format($item->quantity * $item->price, 2), 8, " ", STR_PAD_LEFT);
+                
+                $printer->text("$qty $name$price$total\n");
+            }
+
+            $printer->text("--------------------------------\n");
+
+            // Totales
+            $printer->setJustification(Printer::JUSTIFY_RIGHT);
+            $printer->text("SUBTOTAL: $" . number_format($sale->total, 2) . "\n");
+            $printer->text("TOTAL:    $" . number_format($sale->total, 2) . "\n");
+            $printer->text("PAGADO:   $" . number_format($sale->amount_paid, 2) . "\n");
+            $printer->text("CAMBIO:   $" . number_format($sale->change, 2) . "\n");
+
+            // Pie de página
+            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            $printer->feed(2);
+            $printer->text("¡Gracias por su compra!\n");
+            $printer->text("Vuelva pronto\n");
+            
+            // Código QR o Barcode si lo necesitas
+            // $printer->qrCode("https://tutienda.com/ticket/" . $sale->id);
+            
+            $printer->feed(3);
+            $printer->cut();
+            $printer->pulse();
+
+            $printer->close();
+
+            return response()->json(['success' => true, 'message' => 'Ticket impreso correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error al imprimir: ' . $e->getMessage()], 500);
+        }
+    }
 }
