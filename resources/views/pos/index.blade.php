@@ -490,43 +490,42 @@
         </div>
     </div>
 
-    <!-- Modal para agregar producto externo -->
-    <div class="modal fade" id="externalProductModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="material-icons-round">add_shopping_cart</i>
-                        Agregar Producto Externo
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+   <!-- Modal para agregar producto externo -->
+<div class="modal fade" id="externalProductModal" tabindex="-1" aria-labelledby="externalProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="externalProductModalLabel">
+                    <i class="material-icons-round">add_shopping_cart</i>
+                    Agregar Producto Externo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label for="external_product_name" class="form-label">
+                        <i class="material-icons-round">label</i>
+                        Nombre del Producto
+                    </label>
+                    <input type="text" id="external_product_name" class="form-control">
                 </div>
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label for="external_product_name" class="form-label">
-                            <i class="material-icons-round">label</i>
-                            Nombre del Producto
-                        </label>
-                        <input type="text" id="external_product_name" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="external_product_price" class="form-label">
-                            <i class="material-icons-round">payments</i>
-                            Precio
-                        </label>
-                        <input type="number" id="external_product_price" class="form-control" min="0" step="0.01">
-                    </div>
+                <div class="form-group">
+                    <label for="external_product_price" class="form-label">
+                        <i class="material-icons-round">payments</i>
+                        Precio
+                    </label>
+                    <input type="number" id="external_product_price" class="form-control" min="0" step="0.01">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="material-icons-round">close</i>
-                        Cancelar
-                    </button>
-                    <button type="button" id="addExternalProduct" class="btn btn-primary">
-                        <i class="material-icons-round">add_shopping_cart</i>
-                        Agregar
-                    </button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="material-icons-round">close</i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="addExternalProduct">
+                    <i class="material-icons-round">add_shopping_cart</i>
+                    Agregar
+                </button>
             </div>
         </div>
     </div>
@@ -551,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let cart = [];
 
-    // Funciones principales
+    // Función de búsqueda de productos
     function searchProducts() {
         if (search.value.length > 2) {
             fetch(`/pos/search?term=${encodeURIComponent(search.value)}`)
@@ -605,64 +604,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function printTicket(saleId) {
-    fetch(`/pos/print-ticket/${saleId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('Ticket impreso correctamente', 'success');
-        } else {
-            throw new Error(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error printing ticket:', error);
-        showAlert('Error al imprimir el ticket', 'error');
-    });
-}
-
-// Modifica la función processingSale para incluir la impresión
-function processingSale() {
-    const loadingSwal = Swal.fire({
-        title: 'Procesando venta',
-        text: 'Por favor espere...',
-        icon: 'info',
-        allowOutsideClick: false,
-        showConfirmButton: false,
-        willOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    // ... resto del código de processingSale ...
-
-    .then(data => {
-        loadingSwal.close();
-        Swal.fire({
-            title: '¡Venta exitosa!',
-            text: `Venta procesada correctamente. Cambio: $${parseFloat(changeElement.textContent).toFixed(2)}`,
-            icon: 'success',
-            confirmButtonColor: '#10B981'
-        }).then(() => {
-            // Imprimir ticket
-            printTicket(data.sale.id);
-            
-            // Limpiar carrito y formulario
-            cart = [];
-            updateCartDisplay();
-            amountPaidInput.value = '';
-            search.value = '';
-            searchResults.innerHTML = '';
-            sessionStorage.removeItem('currentSale');
-        });
-    })
-
+    // Función para agregar al carrito
     function addToCart(product) {
         console.log('Agregando al carrito:', product);
 
@@ -698,6 +640,7 @@ function processingSale() {
         updateCartDisplay();
     }
 
+    // Función para actualizar la visualización del carrito
     function updateCartDisplay() {
         console.log('Actualizando carrito:', cart);
 
@@ -746,6 +689,7 @@ function processingSale() {
         saveCurrentSale();
     }
 
+    // Función para actualizar la cantidad de un item en el carrito
     function updateCartItemQuantity(index, quantity) {
         const item = cart[index];
         const newQuantity = parseInt(quantity);
@@ -767,6 +711,7 @@ function processingSale() {
         updateCartDisplay();
     }
 
+    // Función para actualizar el total
     function updateTotal() {
         try {
             const total = cart.reduce((sum, item) => {
@@ -785,6 +730,7 @@ function processingSale() {
         }
     }
 
+    // Función para eliminar del carrito
     function removeFromCart(index) {
         const item = cart[index];
         Swal.fire({
@@ -805,6 +751,7 @@ function processingSale() {
         });
     }
 
+    // Función para actualizar el cambio
     function updateChange() {
         const total = parseFloat(totalElement.textContent);
         const amountPaid = parseFloat(amountPaidInput.value) || 0;
@@ -813,6 +760,8 @@ function processingSale() {
         
         processSaleButton.disabled = cart.length === 0 || amountPaid < total;
     }
+
+    // Función para procesar la venta
     function processSale() {
         const total = parseFloat(totalElement.textContent);
         const amountPaid = parseFloat(amountPaidInput.value);
@@ -838,6 +787,7 @@ function processingSale() {
         });
     }
 
+    // Función para procesar la venta (backend)
     function processingSale() {
         const loadingSwal = Swal.fire({
             title: 'Procesando venta',
@@ -884,6 +834,7 @@ function processingSale() {
                 icon: 'success',
                 confirmButtonColor: '#10B981'
             }).then(() => {
+                printTicket(data.sale.id);
                 cart = [];
                 updateCartDisplay();
                 amountPaidInput.value = '';
@@ -899,39 +850,46 @@ function processingSale() {
         });
     }
 
+    // Función para imprimir ticket
+    function printTicket(saleId) {
+        fetch(`/pos/print-ticket/${saleId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Ticket impreso correctamente', 'success');
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error printing ticket:', error);
+            showAlert('Error al imprimir el ticket', 'error');
+        });
+    }
+
+    // Función para mostrar el modal de producto externo
     function showExternalProductModal() {
         const modalElement = document.getElementById('externalProductModal');
         
-        // Limpiar campos antes de mostrar
         document.getElementById('external_product_name').value = '';
         document.getElementById('external_product_price').value = '';
         
-        // Asegurarse de que cualquier modal previo se cierre correctamente
         const existingModal = bootstrap.Modal.getInstance(modalElement);
         if (existingModal) {
             existingModal.dispose();
         }
 
-        // Crear y mostrar nuevo modal
         const modal = new bootstrap.Modal(modalElement);
-
-        // Manejar el evento hidden.bs.modal
-        modalElement.addEventListener('hidden.bs.modal', function cleanup() {
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-            
-            // Remover el event listener para evitar duplicados
-            modalElement.removeEventListener('hidden.bs.modal', cleanup);
-        });
-
         modal.show();
     }
 
+    // Función para agregar producto externo
     function addExternalProduct() {
         const nameInput = document.getElementById('external_product_name');
         const priceInput = document.getElementById('external_product_price');
@@ -954,23 +912,12 @@ function processingSale() {
 
         cart.push(externalProduct);
         
-        // Cerrar el modal correctamente
         const modalElement = document.getElementById('externalProductModal');
         const modal = bootstrap.Modal.getInstance(modalElement);
         if (modal) {
             modal.hide();
-            
-            // Limpiar el backdrop y restaurar el scroll
-            setTimeout(() => {
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) backdrop.remove();
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-            }, 200);
         }
         
-        // Limpiar campos
         nameInput.value = '';
         priceInput.value = '';
         
@@ -978,6 +925,7 @@ function processingSale() {
         showAlert('Producto externo agregado al carrito', 'success');
     }
 
+    // Función para mostrar alertas
     function showAlert(message, type) {
         Swal.fire({
             title: message,
@@ -994,6 +942,7 @@ function processingSale() {
         });
     }
 
+    // Función para guardar venta actual
     function saveCurrentSale() {
         if (cart.length > 0) {
             sessionStorage.setItem('currentSale', JSON.stringify(cart));
@@ -1002,6 +951,7 @@ function processingSale() {
         }
     }
 
+    // Función debounce para la búsqueda
     function debounce(func, wait) {
         let timeout;
         return function(...args) {
@@ -1010,7 +960,9 @@ function processingSale() {
         };
     }
 
-    // Inicialización y event listeners
+    // Event Listeners
+
+    // Event Listeners
     search.addEventListener('input', debounce(searchProducts, 300));
     amountPaidInput.addEventListener('input', updateChange);
     processSaleButton.addEventListener('click', processSale);
@@ -1032,13 +984,6 @@ function processingSale() {
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) {
                 modal.hide();
-                setTimeout(() => {
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) backdrop.remove();
-                    document.body.classList.remove('modal-open');
-                    document.body.style.overflow = '';
-                    document.body.style.paddingRight = '';
-                }, 200);
             }
         }
     });
@@ -1059,10 +1004,11 @@ function processingSale() {
     }
 
     // Exponer funciones necesarias globalmente
+    window.addExternalProduct = addExternalProduct; 
     window.updateCartItemQuantity = updateCartItemQuantity;
     window.removeFromCart = removeFromCart;
 
-    // Estilos adicionales
+    // Estilos adicionales para las alertas y elementos UI
     document.head.insertAdjacentHTML('beforeend', `
         <style>
             .colored-toast.swal2-icon-success {
@@ -1096,6 +1042,34 @@ function processingSale() {
             }
             .quantity-input {
                 -moz-appearance: textfield;
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .search-item {
+                animation: fadeIn 0.2s ease-out;
+            }
+            .cart-table tr {
+                transition: all 0.2s ease;
+            }
+            .cart-table tr:hover {
+                background-color: rgba(99, 102, 241, 0.05);
+            }
+            .btn-action {
+                transition: all 0.2s ease;
+            }
+            .btn-action:hover {
+                transform: translateY(-2px);
+            }
+            .search-input:focus {
+                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
             }
         </style>
     `);
