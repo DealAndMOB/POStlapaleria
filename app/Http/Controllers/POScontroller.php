@@ -8,6 +8,7 @@ use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PosController extends Controller
 {
@@ -67,7 +68,7 @@ class PosController extends Controller
                     SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => null,
-                        'external_product_name' => $item['name'],
+                        'external_product_name' => $item['name'], // Asegúrate de que este campo se está guardando
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                     ]);
@@ -120,72 +121,101 @@ class PosController extends Controller
         try {
             $sale = Sale::with(['items.product'])->findOrFail($saleId);
             
-            // Configurar el conector de la impresora
-            // Cambia "POS-58" por el nombre de tu impresora
-            $connector = new WindowsPrintConnector("POS-58");
-            $printer = new Printer($connector);
-
-            // Iniciar la impresión
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            $pdf = PDF::loadView('pos.ticket', compact('sale'));
             
-            // Encabezado del ticket
-            $printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-            $printer->text("TU EMPRESA\n");
-            $printer->selectPrintMode();
-            $printer->text("Dirección de tu empresa\n");
-            $printer->text("Tel: (123) 456-7890\n");
-            $printer->feed();
-
-            // Información de la venta
-            $printer->text("Ticket #: " . str_pad($sale->id, 8, "0", STR_PAD_LEFT) . "\n");
-            $printer->text("Fecha: " . $sale->created_at->format('d/m/Y H:i:s') . "\n");
-            $printer->feed();
-
-            // Encabezado de productos
-            $printer->text("--------------------------------\n");
-            $printer->text("CANT  PRODUCTO    PRECIO   TOTAL\n");
-            $printer->text("--------------------------------\n");
-
-            // Productos
-            foreach ($sale->items as $item) {
-                $name = $item->product ? $item->product->name : $item->external_product_name;
-                // Limitar el nombre del producto a 10 caracteres
-                $name = substr($name, 0, 10);
-                
-                $qty = str_pad($item->quantity, 3, " ", STR_PAD_LEFT);
-                $price = str_pad('$' . number_format($item->price, 2), 8, " ", STR_PAD_LEFT);
-                $total = str_pad('$' . number_format($item->quantity * $item->price, 2), 8, " ", STR_PAD_LEFT);
-                
-                $printer->text("$qty $name$price$total\n");
-            }
-
-            $printer->text("--------------------------------\n");
-
-            // Totales
-            $printer->setJustification(Printer::JUSTIFY_RIGHT);
-            $printer->text("SUBTOTAL: $" . number_format($sale->total, 2) . "\n");
-            $printer->text("TOTAL:    $" . number_format($sale->total, 2) . "\n");
-            $printer->text("PAGADO:   $" . number_format($sale->amount_paid, 2) . "\n");
-            $printer->text("CAMBIO:   $" . number_format($sale->change, 2) . "\n");
-
-            // Pie de página
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->feed(2);
-            $printer->text("¡Gracias por su compra!\n");
-            $printer->text("Vuelva pronto\n");
+            // Configurar el PDF para impresora térmica de 58mm (164.409pt)
+            $customPaper = array(0, 0, 164.409, 400);
             
-            // Código QR o Barcode si lo necesitas
-            // $printer->qrCode("https://tutienda.com/ticket/" . $sale->id);
+            $pdf->setPaper($customPaper);
             
-            $printer->feed(3);
-            $printer->cut();
-            $printer->pulse();
-
-            $printer->close();
-
-            return response()->json(['success' => true, 'message' => 'Ticket impreso correctamente']);
+            $pdf->setOptions([
+                'margin-top'    => 0,
+                'margin-right'  => 0,
+                'margin-bottom' => 0,
+                'margin-left'   => 0,
+                'dpi'          => 130,
+                'default-font-size' => 11,
+                'enable-smart-shrinking' => true,
+                'no-outline'   => true,
+                'page-size'    => 'custom',
+                'zoom'         => 1,
+                'title' => false,
+                'enable-local-file-access' => true,
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true,
+                'isPhpEnabled' => true,
+                'isFontSubsettingEnabled' => true,
+                'isHtml5ParserEnabled' => true
+            ]);
+            
+            return $pdf->stream("ticket-{$saleId}.pdf");
+            
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error al imprimir: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error al generar el ticket: ' . $e->getMessage()
+            ], 500);
         }
     }
+
+    // Método adicional para imprimir directamente en la impresora térmica (opcional)
+    public function printToThermal($saleId)
+    {
+        try {
+            $sale = Sale::with(['items.product'])->findOrFail($saleId);
+            
+            // Primero generamos el PDF
+            $pdf = PDF::loadView('pos.ticket', compact('sale'));
+            $pdf->setPaper([0, 0, 226.77, 841.89], 'portrait');
+            
+            // Guardamos el PDF temporalmente
+            $tempPath = storage_path('app/public/temp/');
+            if (!file_exists($tempPath)) {
+                mkdir($tempPath, 0755, true);
+            }
+            
+            $pdfPath = $tempPath . "ticket-{$saleId}.pdf";
+            $pdf->save($pdfPath);
+            
+            // Imprimir usando el comando del sistema
+            if (PHP_OS === 'WINNT') {
+                // Para Windows
+                $printerName = 'POS-58'; // Nombre de tu impresora térmica
+                exec('SumatraPDF.exe -print-to "' . $printerName . '" "' . $pdfPath . '"');
+            } else {
+                // Para Linux/Unix
+                exec('lpr -P POS-58 ' . $pdfPath);
+            }
+            
+            // Eliminar el archivo temporal
+            unlink($pdfPath);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket impreso correctamente'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al imprimir el ticket: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+     // Método para obtener el historial de ventas
+     public function getSalesHistory(Request $request)
+     {
+         $sales = Sale::with(['items.product'])
+             ->orderBy('created_at', 'desc')
+             ->paginate(10);
+ 
+         return view('pos.sales-history', compact('sales'));
+     }
+ 
+     // Método para reimprimir un ticket
+     public function reprintTicket($saleId)
+     {
+         return $this->printTicket($saleId);
+     }
 }
