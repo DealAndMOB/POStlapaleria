@@ -490,8 +490,8 @@
         </div>
     </div>
 
-   <!-- Modal para agregar producto externo -->
-<div class="modal fade" id="externalProductModal" tabindex="-1" aria-labelledby="externalProductModalLabel" aria-hidden="true">
+<!-- Modal para agregar producto externo -->
+<div class="modal fade" id="externalProductModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="externalProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -507,14 +507,14 @@
                         <i class="material-icons-round">label</i>
                         Nombre del Producto
                     </label>
-                    <input type="text" id="external_product_name" class="form-control">
+                    <input type="text" id="external_product_name" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="external_product_price" class="form-label">
                         <i class="material-icons-round">payments</i>
                         Precio
                     </label>
-                    <input type="number" id="external_product_price" class="form-control" min="0" step="0.01">
+                    <input type="number" id="external_product_price" class="form-control" min="0" step="0.01" required>
                 </div>
             </div>
             <div class="modal-footer">
@@ -545,8 +545,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const amountPaidInput = document.getElementById('amount_paid');
     const changeElement = document.getElementById('change');
     const processSaleButton = document.getElementById('processSale');
-    const showExternalProductModalButton = document.getElementById('showExternalProductModal');
-    const addExternalProductButton = document.getElementById('addExternalProduct');
+    
+    // Inicialización del modal
+    const externalProductModal = new bootstrap.Modal(document.getElementById('externalProductModal'), {
+        keyboard: true,
+        backdrop: true,
+        focus: true
+    });
 
     let cart = [];
 
@@ -561,7 +566,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Datos recibidos:', data);
                     if (Array.isArray(data) && data.length > 0) {
                         searchResults.innerHTML = data.map(product => `
                             <div class="search-item" role="button" tabindex="0" data-product='${JSON.stringify(product)}'>
@@ -606,8 +610,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para agregar al carrito
     function addToCart(product) {
-        console.log('Agregando al carrito:', product);
-
         if (!product || !product.id) {
             console.error('Producto inválido:', product);
             showAlert('Error al agregar el producto', 'error');
@@ -642,8 +644,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para actualizar la visualización del carrito
     function updateCartDisplay() {
-        console.log('Actualizando carrito:', cart);
-
         if (!Array.isArray(cart)) {
             console.error('El carrito no es un array:', cart);
             cart = [];
@@ -761,6 +761,50 @@ document.addEventListener('DOMContentLoaded', function() {
         processSaleButton.disabled = cart.length === 0 || amountPaid < total;
     }
 
+    // Función para mostrar el modal de producto externo
+    function showExternalProductModal() {
+        // Limpiar campos del modal
+        document.getElementById('external_product_name').value = '';
+        document.getElementById('external_product_price').value = '';
+        
+        // Mostrar el modal
+        externalProductModal.show();
+    }
+
+    // Función para agregar producto externo
+    function addExternalProduct() {
+        const nameInput = document.getElementById('external_product_name');
+        const priceInput = document.getElementById('external_product_price');
+        const name = nameInput.value.trim();
+        const price = parseFloat(priceInput.value);
+
+        if (!name || !price || price <= 0) {
+            showAlert('Por favor, ingrese un nombre y un precio válido', 'error');
+            return;
+        }
+
+        const externalProduct = {
+            id: 'ext_' + Date.now(),
+            name: name,
+            price: price,
+            is_external: true,
+            stock: 999,
+            quantity: 1
+        };
+
+        cart.push(externalProduct);
+        
+        // Ocultar el modal
+        externalProductModal.hide();
+        
+        // Limpiar campos
+        nameInput.value = '';
+        priceInput.value = '';
+        
+        updateCartDisplay();
+        showAlert('Producto externo agregado al carrito', 'success');
+    }
+
     // Función para procesar la venta
     function processSale() {
         const total = parseFloat(totalElement.textContent);
@@ -873,58 +917,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Función para mostrar el modal de producto externo
-    function showExternalProductModal() {
-        const modalElement = document.getElementById('externalProductModal');
-        
-        document.getElementById('external_product_name').value = '';
-        document.getElementById('external_product_price').value = '';
-        
-        const existingModal = bootstrap.Modal.getInstance(modalElement);
-        if (existingModal) {
-            existingModal.dispose();
-        }
-
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-    }
-
-    // Función para agregar producto externo
-    function addExternalProduct() {
-        const nameInput = document.getElementById('external_product_name');
-        const priceInput = document.getElementById('external_product_price');
-        const name = nameInput.value.trim();
-        const price = parseFloat(priceInput.value);
-
-        if (!name || !price || price <= 0) {
-            showAlert('Por favor, ingrese un nombre y un precio válido', 'error');
-            return;
-        }
-
-        const externalProduct = {
-            id: 'ext_' + Date.now(),
-            name: name,
-            price: price,
-            is_external: true,
-            stock: 999,
-            quantity: 1
-        };
-
-        cart.push(externalProduct);
-        
-        const modalElement = document.getElementById('externalProductModal');
-        const modal = bootstrap.Modal.getInstance(modalElement);
-        if (modal) {
-            modal.hide();
-        }
-        
-        nameInput.value = '';
-        priceInput.value = '';
-        
-        updateCartDisplay();
-        showAlert('Producto externo agregado al carrito', 'success');
-    }
-
     // Función para mostrar alertas
     function showAlert(message, type) {
         Swal.fire({
@@ -961,13 +953,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event Listeners
-
-    // Event Listeners
     search.addEventListener('input', debounce(searchProducts, 300));
     amountPaidInput.addEventListener('input', updateChange);
-    processSaleButton.addEventListener('click', processSale);
-    showExternalProductModalButton.addEventListener('click', showExternalProductModal);
-    addExternalProductButton.addEventListener('click', addExternalProduct);
+ // Event Listeners (continuación)
+ processSaleButton.addEventListener('click', processSale);
+    document.getElementById('showExternalProductModal').addEventListener('click', showExternalProductModal);
+    document.getElementById('addExternalProduct').addEventListener('click', addExternalProduct);
 
     // Cerrar resultados de búsqueda al hacer clic fuera
     document.addEventListener('click', function(e) {
@@ -980,11 +971,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             searchResults.innerHTML = '';
-            const modalElement = document.getElementById('externalProductModal');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) {
-                modal.hide();
-            }
+            externalProductModal.hide();
         }
     });
 
@@ -1004,7 +991,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Exponer funciones necesarias globalmente
-    window.addExternalProduct = addExternalProduct; 
+    window.addExternalProduct = addExternalProduct;
+    window.showExternalProductModal = showExternalProductModal;
     window.updateCartItemQuantity = updateCartItemQuantity;
     window.removeFromCart = removeFromCart;
 
@@ -1017,6 +1005,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             .colored-toast.swal2-icon-error {
                 background: #EF4444 !important;
+                color: white !important;
+            }
+            .colored-toast.swal2-icon-info {
+                background: #3B82F6 !important;
                 color: white !important;
             }
             .stock-badge {
@@ -1069,6 +1061,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 transform: translateY(-2px);
             }
             .search-input:focus {
+                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            }
+            #externalProductModal .modal-content {
+                border: none;
+                border-radius: 1rem;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            #externalProductModal .modal-header {
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 1.5rem;
+            }
+            #externalProductModal .modal-body {
+                padding: 1.5rem;
+            }
+            #externalProductModal .modal-footer {
+                border-top: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 1.5rem;
+            }
+            .form-control:focus {
+                border-color: #6366F1;
                 box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
             }
         </style>

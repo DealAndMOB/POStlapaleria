@@ -615,18 +615,33 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @vite(['resources/js/app.js'])
-    @stack('scripts')
+<!-- Scripts esenciales -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
+<!-- Scripts de la aplicación -->
+@vite(['resources/js/app.js'])
+
+<!-- Scripts adicionales -->
+<script>
+    // Configuración global de Bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configuración para modales de Bootstrap
+        var modalElements = document.querySelectorAll('.modal');
+        modalElements.forEach(function(modalElement) {
+            new bootstrap.Modal(modalElement, {
+                keyboard: true,
+                backdrop: true,
+                focus: true
+            });
+        });
+
         // Toggle dropdown
-        document.querySelector('.user-profile').addEventListener('click', function(e) {
+        document.querySelector('.user-profile')?.addEventListener('click', function(e) {
             e.stopPropagation();
             this.classList.toggle('active');
         });
@@ -639,19 +654,18 @@
         });
 
         // Mobile menu toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggleBtn = document.createElement('button');
-            toggleBtn.className = 'menu-toggle';
-            toggleBtn.innerHTML = '<i class="material-icons-round">menu</i>';
-            
-            document.body.appendChild(toggleBtn);
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'menu-toggle';
+        toggleBtn.innerHTML = '<i class="material-icons-round">menu</i>';
+        
+        document.body.appendChild(toggleBtn);
 
-            toggleBtn.addEventListener('click', function() {
-                document.querySelector('.sidebar').classList.toggle('active');
-            });
+        toggleBtn.addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
         });
-    </script>
+    });
+</script>
 
-    @stack('scripts')
+@stack('scripts')
 </body>
 </html>
