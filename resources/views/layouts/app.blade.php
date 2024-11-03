@@ -566,7 +566,7 @@
             <div class="content">
                 <!-- Stats Cards -->
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    {{-- <div class="stat-card">
                         <div class="stat-icon sales">
                             <i class="material-icons-round">payments</i>
                         </div>
@@ -605,7 +605,7 @@
                             <div class="stat-label">Ingresos Mensuales</div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- View Content Container -->
                 <div class="view-content">
