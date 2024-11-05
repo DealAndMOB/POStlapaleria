@@ -407,7 +407,7 @@
         <div class="pos-header">
             <h1 class="pos-title">
                 <i class="material-icons-round">point_of_sale</i>
-                Punto de Venta
+                Ventas
             </h1>
             <a href="{{ route('sales.report') }}" class="btn-main report">
                 <i class="material-icons-round">assessment</i>
@@ -422,7 +422,7 @@
                     <div class="card-header">
                         <h3>
                             <i class="material-icons-round">shopping_cart</i>
-                            Carrito de Compras
+                            Carrito de Venta
                         </h3>
                     </div>
                     <div class="card-body">

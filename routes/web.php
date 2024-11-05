@@ -9,16 +9,24 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesReportController;
 
+// Ruta raíz redirige al login
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
+// Rutas de autenticación
 Auth::routes();
 
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+// Redireccionar /home a /pos
+Route::get('/home', function () {
+    return redirect()->route('pos.index');
+})->name('home');
 
 // Rutas protegidas por autenticación
 Route::middleware(['auth'])->group(function () {
+    // Ruta predeterminada después del login
+    Route::redirect('/dashboard', '/pos')->name('dashboard');
+    
     // Rutas para el sistema de punto de venta
     Route::prefix('pos')->group(function () {
         Route::get('/', [POSController::class, 'index'])->name('pos.index');
@@ -26,7 +34,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/process-sale', [POSController::class, 'processSale'])->name('pos.process-sale');
         Route::post('/add-external-product', [POSController::class, 'addExternalProduct'])->name('pos.add-external-product');
         
-        // Nuevas rutas para manejo de tickets
+        // Rutas para manejo de tickets
         Route::get('/print-ticket/{saleId}', [POSController::class, 'printTicket'])->name('pos.print-ticket');
         Route::get('/reprint-ticket/{saleId}', [POSController::class, 'reprintTicket'])->name('pos.reprint-ticket');
         Route::post('/print-thermal/{saleId}', [POSController::class, 'printToThermal'])->name('pos.print-thermal');

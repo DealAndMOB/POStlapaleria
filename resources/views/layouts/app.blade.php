@@ -258,16 +258,17 @@
             padding: 0.5rem;
             min-width: 200px;
             z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.2s ease;
+            display: none; /* Cambiado de opacity/visibility a display */
+            border: 1px solid rgba(0,0,0,0.1);
         }
 
         .pos-layout .dropdown.active .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
+            display: block; /* Cambiado para usar display en lugar de opacity/visibility */
+        }
+
+        .pos-layout .dropdown-divider {
+            margin: 0.5rem 0;
+            border-top: 1px solid rgba(0,0,0,0.1);
         }
 
         .pos-layout .dropdown-item {
@@ -442,7 +443,7 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('pos.index') ? 'active' : '' }}" href="{{ route('pos.index') }}">
                                 <i class="material-icons-round">point_of_sale</i>
-                                <span>Punto de Venta</span>
+                                <span>Venta</span>
                             </a>
                         </li>
                         <li class="nav-item">
