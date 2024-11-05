@@ -8,142 +8,170 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
         
         body {
             font-family: 'Arial', sans-serif;
-            font-size: 9px;
+            font-size: 8px;
             line-height: 1.2;
             width: 100%;
-            max-width: 100%;
             display: flex;
             justify-content: center;
+            background-color: white;
         }
         
         .ticket {
-            width: 100%;
-            max-width: 250px; /* Ancho máximo para mantener proporción */
-            padding: 5px;
+            width: 50mm;
+            max-width: 50mm;
+            background: white;
+            padding: 2mm;
             margin: 0 auto;
         }
         
         .header {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        
-        .logo-container {
-            width: 100%;
             text-align: center;
             margin-bottom: 5px;
         }
         
+        .logo-container {
+            margin-bottom: 4px;
+        }
+        
         .logo-container img {
-            max-width: 160px; /* Ajusta este valor según el tamaño que necesites */
+            max-width: 40mm;
             height: auto;
-            margin: 0 auto;
             display: block;
+            margin: 0 auto;
         }
         
         .company-info {
-            font-size: 11px;
-            line-height: 1.2;
-            margin-top: 5px;
+            font-size: 8px;
+            line-height: 1.3;
+            margin-top: 4px;
+        }
+        
+        .company-info div {
+            margin: 1px 0;
         }
         
         .info {
-            margin-bottom: 8px;
-            width: 100%;
+            margin: 5px 0;
         }
         
         .info div {
             display: flex;
             justify-content: space-between;
             margin: 2px 0;
+            font-size: 8px;
         }
         
         .divider {
-            border-top: 1px dotted #000;
-            margin: 5px 0;
-            width: 100%;
+            border-top: 1px dashed #000;
+            margin: 4px 0;
         }
         
+        /* Tabla de productos */
         .items {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* Importante para control de ancho de columnas */
+            margin: 4px 0;
+            table-layout: fixed;
         }
         
         .items thead th {
+            padding: 2px 1px;
+            font-size: 8px;
+            font-weight: bold;
             border-bottom: 1px solid #000;
-            padding: 3px 2px;
-            font-size: 11px;
-            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
         }
         
         .items tbody td {
-            padding: 3px 2px;
+            padding: 2px 1px;
+            font-size: 8px;
             vertical-align: top;
         }
         
-        /* Ajuste de anchos de columna */
+        /* Columnas de la tabla */
         .quantity {
             width: 15%;
             text-align: center;
         }
         
         .product-name {
-            width: 45%;
-            word-wrap: break-word;
+            width: 40%;
             text-align: left;
         }
         
         .price {
-            width: 20%;
+            width: 22%;
             text-align: right;
         }
         
         .total {
-            width: 20%;
+            width: 23%;
             text-align: right;
         }
         
+        /* Contenedor de productos */
+        .product-cell {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.2;
+        }
+        
+        /* Sección de totales */
         .total-section {
-            width: 100%;
-            margin-top: 8px;
+            margin-top: 5px;
         }
         
         .total-section div {
             display: flex;
             justify-content: space-between;
             margin: 2px 0;
+            font-size: 8px;
         }
         
         .total-line {
             font-weight: bold;
-            font-size: 13px;
-            margin-top: 3px;
+            font-size: 9px;
+            margin: 3px 0;
         }
         
         .footer {
-            width: 100%;
             text-align: center;
-            margin-top: 10px;
-            font-size: 10px;
+            margin-top: 8px;
+            font-size: 8px;
+            line-height: 1.3;
         }
         
-        /* Manejo de desbordamiento para productos largos */
-        .product-cell {
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        /* Mejoras para impresión */
+        @media print {
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            
+            .ticket {
+                padding: 2mm;
+            }
+            
+            .product-cell {
+                max-width: 20mm;
+            }
         }
         
-        /* Asegura que los números no se desborden */
+        /* Utilidades */
         .number {
+            font-family: 'Courier New', monospace;
             white-space: nowrap;
+        }
+        
+        strong {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -151,22 +179,27 @@
     <div class="ticket">
         <div class="header">
             <div class="logo-container">
-                <img src="{{ asset('images/logo-tienda.jpeg') }}" alt="Logo de la empresa">
+                <img src="{{ asset('images/logo-tienda.jpeg') }}" alt="Logo">
             </div>
             <div class="company-info">
-                <div>Dirección de tu empresa</div>
-                <div>Tel: (123) 456-7890</div>
+                <div><strong>RFC:</strong> CUMR770117N18</div>
+                <div>Av 16 de septiembre Mz. 39. Lt. 24.</div>
+                <div>San Pedro Atzompa</div>
+                <div><strong>Tel:</strong> 55-14-36-34-81</div>
+                <div><strong>Tel:</strong> 55-59-38-75-20</div>
             </div>
         </div>
+
+        <div class="divider"></div>
 
         <div class="info">
             <div>
                 <span><strong>Ticket:</strong></span>
-                <span>{{ str_pad($sale->id, 8, "0", STR_PAD_LEFT) }}</span>
+                <span class="number">{{ str_pad($sale->id, 9, "0", STR_PAD_LEFT) }}</span>
             </div>
             <div>
                 <span><strong>Fecha:</strong></span>
-                <span>{{ $sale->created_at->format('d/m/Y H:i') }}</span>
+                <span class="number">{{ $sale->created_at->format('d/m/Y') }}</span>
             </div>
         </div>
 
@@ -175,8 +208,8 @@
         <table class="items">
             <thead>
                 <tr>
-                    <th class="quantity">CANTIDAD</th>
-                    <th class="product-name">DESCRIPCIÓN</th>
+                    <th class="quantity">CANT</th>
+                    <th class="product-name">DESC</th>
                     <th class="price">PRECIO</th>
                     <th class="total">TOTAL</th>
                 </tr>
@@ -221,8 +254,9 @@
         <div class="divider"></div>
 
         <div class="footer">
-            <div>¡Gracias por su compra!</div>
-            <div>Vuelva pronto</div>
+            <div><strong>TODA ENTREGA</strong></div>
+            <div><strong>SE REALIZA A PIE DE CAMIÓN</strong></div>
+            <div style="margin-top: 4px;">¡Gracias por su compra!</div>
         </div>
     </div>
 </body>
